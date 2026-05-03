@@ -1,0 +1,277 @@
+// PRED-CRIM — esquema de base de datos
+// Cubre los 7 CUs y los 5 actores del documento de especificación.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")      // pooled (Supabase pooler :6543)
+  directUrl = env("DIRECT_URL")        // direct (Supabase :5432) — usado por migrate/push
+}
+
+// --------- USUARIOS Y ROLES (actores) ---------
+
+enum Role {
+  ANALISTA_DATOS      // ACT-01
+  ANALISTA_SEGURIDAD  // ACT-02
+  CIUDADANO           // ACT-03
+  JEFATURA            // ACT-04
+  PERSONAL_CAMPO      // ACT-05
+  ADMIN
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  passwordHash   String
+  name           String
+  role           Role     @default(CIUDADANO)
+  unit           String?  // Unidad / comisaría
+  rutDni         String?  @unique
+  lastAccessAt   DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  uploads        IncidentUpload[]
+  reports        CitizenReport[]
+  configs        AnalysisConfig[]
+  models         PredictiveModel[]
+  generatedStats StatReport[]
+  alertsReceived AlertDelivery[]
+
+  @@index([role])
+}
+
+// --------- DATOS: CATEGORÍAS E INCIDENTES ---------
+
+// CU / HU 1.2: categorización técnica de delitos
+model CrimeCategory {
+  id          String   @id @default(cuid())
+  code        String   @unique          // ej. "ROBO_VIOLENTO"
+  name        String
+  description String?
+  severity    Int      @default(1)      // 1 (leve) a 5 (grave)
+  createdAt   DateTime @default(now())
+
+  incidents   Incident[]
+  configs     ConfigCategoryWeight[]
+}
+
+// CU-01 / HU 1.1: registros históricos
+model Incident {
+  id          String        @id @default(cuid())
+  categoryId  String
+  category    CrimeCategory @relation(fields: [categoryId], references: [id])
+  occurredAt  DateTime                             // fecha/hora del hecho
+  latitude    Float
+  longitude   Float
+  address     String?
+  zone        String?                              // cuadrante/barrio
+  description String?
+  source      IncidentSource @default(HISTORICAL)
+  uploadId    String?
+  upload      IncidentUpload? @relation(fields: [uploadId], references: [id])
+  createdAt   DateTime        @default(now())
+
+  @@index([occurredAt])
+  @@index([categoryId])
+  @@index([latitude, longitude])
+  @@index([zone])
+}
+
+enum IncidentSource {
+  HISTORICAL   // carga masiva (CU-01)
+  CITIZEN      // denuncia ciudadana (CU-02) tras validación
+  MANUAL
+}
+
+model IncidentUpload {
+  id             String   @id @default(cuid())
+  filename       String
+  uploadedById   String
+  uploadedBy     User     @relation(fields: [uploadedById], references: [id])
+  totalRows      Int      @default(0)
+  acceptedRows   Int      @default(0)
+  rejectedRows   Int      @default(0)
+  errorLog       String?
+  createdAt      DateTime @default(now())
+
+  incidents      Incident[]
+}
+
+// CU-02 / HU 1.3: denuncias ciudadanas
+model CitizenReport {
+  id             String          @id @default(cuid())
+  reporterId     String?                            // opcional: anónimo
+  reporter       User?           @relation(fields: [reporterId], references: [id])
+  reporterName   String?
+  reporterContact String?
+  categoryCode   String?                            // mapea a CrimeCategory.code
+  occurredAt     DateTime
+  latitude       Float
+  longitude      Float
+  address        String?
+  description    String
+  status         ReportStatus    @default(PENDING)
+  reviewedBy     String?
+  reviewNote     String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum ReportStatus {
+  PENDING
+  VALIDATED
+  REJECTED
+  DUPLICATE
+}
+
+// --------- ANÁLISIS PREDICTIVO ---------
+
+// CU-03: configuración de parámetros
+model AnalysisConfig {
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  createdById       String
+  createdBy         User     @relation(fields: [createdById], references: [id])
+  fromDate          DateTime
+  toDate            DateTime
+  zoneFilter        String?
+  gridSize          Float    @default(0.01)   // ~1 km por celda
+  riskThreshold     Float    @default(0.7)    // umbral para alertas CU-07
+  timeDecayFactor   Float    @default(0.05)   // peso de recencia
+  active            Boolean  @default(false)
+  createdAt         DateTime @default(now())
+
+  weights           ConfigCategoryWeight[]
+  models            PredictiveModel[]
+}
+
+model ConfigCategoryWeight {
+  id         String        @id @default(cuid())
+  configId   String
+  config     AnalysisConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   CrimeCategory @relation(fields: [categoryId], references: [id])
+  weight     Float         @default(1.0)
+
+  @@unique([configId, categoryId])
+}
+
+// CU-04: modelos entrenados
+model PredictiveModel {
+  id             String        @id @default(cuid())
+  configId       String
+  config         AnalysisConfig @relation(fields: [configId], references: [id])
+  trainedById    String
+  trainedBy      User          @relation(fields: [trainedById], references: [id])
+  status         ModelStatus   @default(TRAINING)
+  accuracy       Float?
+  sampleSize     Int           @default(0)
+  metrics        Json?
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  predictions    Prediction[]
+  alerts         Alert[]
+
+  @@index([status])
+}
+
+enum ModelStatus {
+  TRAINING
+  READY
+  PUBLISHED
+  FAILED
+  ARCHIVED
+}
+
+// CU-05: celdas de predicción (grid) y mapa de calor
+model Prediction {
+  id           String          @id @default(cuid())
+  modelId      String
+  model        PredictiveModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  latitude     Float
+  longitude    Float
+  gridSize     Float
+  riskScore    Float                               // 0..1
+  hourOfDay    Int?                                // 0..23 (null = global)
+  dominantCategory String?                         // categoría que más aporta
+  createdAt    DateTime        @default(now())
+
+  @@index([modelId])
+  @@index([riskScore])
+  @@index([hourOfDay])
+}
+
+// CU-07: alertas
+model Alert {
+  id           String       @id @default(cuid())
+  modelId      String
+  model        PredictiveModel @relation(fields: [modelId], references: [id])
+  latitude     Float
+  longitude    Float
+  zone         String?
+  riskScore    Float
+  category     String?
+  hourOfDay    Int?
+  level        AlertLevel   @default(MEDIUM)
+  status       AlertStatus  @default(OPEN)
+  message      String
+  createdAt    DateTime     @default(now())
+  resolvedAt   DateTime?
+
+  deliveries   AlertDelivery[]
+
+  @@index([status])
+  @@index([level])
+  @@index([createdAt])
+}
+
+enum AlertLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+  DISMISSED
+}
+
+model AlertDelivery {
+  id          String       @id @default(cuid())
+  alertId     String
+  alert       Alert        @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  acknowledged Boolean     @default(false)
+  acknowledgedAt DateTime?
+  createdAt   DateTime     @default(now())
+
+  @@unique([alertId, userId])
+}
+
+// CU-06: reportes estadísticos generados
+model StatReport {
+  id           String       @id @default(cuid())
+  title        String
+  fromDate     DateTime
+  toDate       DateTime
+  zoneFilter   String?
+  categoryFilter String?
+  generatedById String
+  generatedBy  User         @relation(fields: [generatedById], references: [id])
+  payload      Json                               // métricas agregadas
+  createdAt    DateTime     @default(now())
+}
