@@ -1,112 +1,132 @@
-# PRED-CRIM
+# PRED-CRIM: Sistema de Prevención del Delito
 
-Sistema de análisis y prevención del delito. Web app full-stack que implementa los 7 casos de uso del documento de especificación:
+![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=nextdotjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
+![Prisma](https://img.shields.io/badge/Prisma-5-2D3748?logo=prisma)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791?logo=postgresql)
+![Jira](https://img.shields.io/badge/Scrum-Jira-0052CC?logo=jira)
 
-| Caso | Funcionalidad | Ruta | Rol principal |
-|------|---------------|------|---------------|
-| CU-01 | Cargar registros históricos | `/datos` | Analista de Datos |
-| CU-02 | Gestionar denuncias ciudadanas | `/denunciar` (público) + `/denuncias` (moderación) | Ciudadano · Analista de Datos |
-| CU-03 | Configurar parámetros | `/configuracion` | Analista de Seguridad |
-| CU-04 | Entrenar modelo predictivo | `/modelos` | Analista de Seguridad |
-| CU-05 | Mapa de calor | `/mapa` | Jefatura · Analista de Seguridad |
-| CU-06 | Reportes estadísticos | `/reportes` | Jefatura · Analista de Seguridad |
-| CU-07 | Alertas de seguridad | `/alertas` | Personal de Campo · Jefatura |
+Este proyecto se desarrolla en el marco de la carrera de Ingeniería en Computación e Informática. El objetivo central es la construcción de una plataforma de análisis predictivo diseñada para identificar patrones delictuales geográficos y temporales, optimizando la toma de decisiones estratégicas en seguridad pública. El sistema sigue una arquitectura de software robusta basada en el modelo de vistas 4+1 y principios de programación orientada a objetos.
 
-## Stack
+> **Nota sobre el stack**: la especificación original planteaba un motor en C++ con PostgreSQL/PostGIS. Durante la implementación se pivotó a un stack web moderno (Next.js + TypeScript + Prisma) por razones de tiempo de entrega y demostrabilidad. Los algoritmos predictivos se mantienen funcionalmente equivalentes: agregación espacial en grilla, decay temporal y ponderación por categoría delictual.
 
-- Next.js 14 (App Router) + TypeScript
-- Tailwind CSS
-- PostgreSQL + Prisma ORM
-- NextAuth v5 (JWT + credenciales) con control de acceso por rol
-- Leaflet + leaflet.heat para visualización geográfica
-- Zod para validación
+## Objetivos del Proyecto
 
-## Puesta en marcha
+- **Registro de Incidentes**: Almacenamiento de datos clave como coordenadas geográficas, tipología delictual y franjas horarias.
+- **Administración de Datos**: Gestión centralizada de bases de datos históricas de criminalidad.
+- **Análisis Predictivo**: Generación de pronósticos de riesgo automáticos para ventanas temporales de 24 horas.
+- **Visualización Geográfica**: Identificación de puntos de alta concentración delictual (hotspots) mediante herramientas de mapeo.
+- **Optimización de Recursos**: Facilitar la asignación eficiente de personal preventivo basada en datos estadísticos.
 
-1. **Instalar dependencias**
-   ```bash
-   npm install
-   ```
+## Especificaciones Técnicas
 
-2. **Configurar variables de entorno**
-   ```bash
-   cp .env.example .env
-   ```
-   Edita `.env`. Tienes dos caminos:
+| Componente | Tecnología |
+|------------|-----------|
+| Lenguaje de Programación | TypeScript 5 |
+| Framework Web | Next.js 14 (App Router, React 18) |
+| Base de Datos | PostgreSQL (Supabase) |
+| ORM | Prisma 5 |
+| Autenticación | NextAuth v5 (JWT, control por rol) |
+| Visualización Geográfica | Leaflet + leaflet.heat |
+| Estilos | Tailwind CSS |
+| Arquitectura | Modelo de Vistas 4+1 |
+| Gestión de Proyecto | Marco de trabajo Scrum coordinado en Jira |
 
-   **A. Supabase (recomendado, gratis)**
-   1. Crea un proyecto en https://supabase.com → elige región cercana y anota la contraseña.
-   2. En el dashboard: **Project Settings → Database → Connection string**.
-   3. Copia las dos variantes:
-      - **Transaction mode** (puerto `6543`, con `pgbouncer=true`) → `DATABASE_URL`
-      - **Session mode** / **Direct connection** (puerto `5432`) → `DIRECT_URL`
-   4. Reemplaza `[YOUR-PASSWORD]` por la contraseña en ambas URLs.
-   5. Genera `AUTH_SECRET` con `openssl rand -base64 32`.
+## Funcionalidades Implementadas y Planificadas
 
-   **B. Postgres local**
-   Apunta ambas variables a la misma URL local (ver `.env.example`).
+### Gestión e Integración de Datos
 
-3. **Inicializar base de datos**
-   ```bash
-   npm run db:push    # aplica el schema
-   npm run db:seed    # usuarios demo + 800 incidentes ficticios en Santiago
-   ```
+- Importación de registros históricos en formatos estandarizados (CSV).
+- Categorización técnica de delitos según la normativa vigente.
+- Registro de denuncias ciudadanas con validación de geolocalización.
 
-4. **Desarrollo**
-   ```bash
-   npm run dev
-   ```
-   → http://localhost:3000
+### Motor de Análisis Predictivo
 
-## Cuentas demo (tras `db:seed`)
+- Identificación de patrones horarios de mayor incidencia delictual.
+- Generación de alertas de riesgo basadas en modelos de probabilidad espacial.
+- Configuración de umbrales de sensibilidad para el motor de análisis.
 
-| Correo | Contraseña | Rol |
-|--------|-----------|-----|
-| admin@predcrim.cl | admin123 | Administrador |
-| datos@predcrim.cl | datos123 | Analista de Datos |
-| seguridad@predcrim.cl | seg123 | Analista de Seguridad |
-| jefatura@predcrim.cl | jefe123 | Jefatura / Decisor |
-| campo@predcrim.cl | campo123 | Personal de Campo |
-| ciudadano@predcrim.cl | ciudadano123 | Ciudadano |
+### Visualización y Planificación
 
-## Flujo extremo a extremo
+- Generación de mapas de calor dinámicos para el mando operativo.
+- Emisión de informes estadísticos para la administración municipal.
+- Sugerencia automatizada para la asignación de patrullaje preventivo.
 
-1. Entra como **Analista de Seguridad** → `/configuracion` → crea una configuración, marca "Activar al guardarla".
-2. Entra a `/modelos` → "Ejecutar entrenamiento". El modelo queda en estado **READY**.
-3. Click **Publicar** → el modelo queda **PUBLISHED** y se generan alertas automáticas para las celdas que superan el umbral.
-4. Entra como **Jefatura** → `/mapa` para ver el heatmap; `/reportes` para ver indicadores.
-5. Entra como **Personal de Campo** → `/alertas` ve sólo las alertas asignadas y puede confirmar recepción.
+## Casos de Uso del Sistema
 
-## Formato CSV para carga de datos (CU-01)
+| Caso | Funcionalidad | Actor principal |
+|------|---------------|-----------------|
+| CU-01 | Cargar registros históricos | Analista de Datos |
+| CU-02 | Gestionar denuncias ciudadanas | Ciudadano · Analista de Datos |
+| CU-03 | Configurar parámetros de análisis | Analista de Seguridad |
+| CU-04 | Ejecutar entrenamiento de modelo | Analista de Seguridad |
+| CU-05 | Visualizar mapa de calor | Jefatura · Analista de Seguridad |
+| CU-06 | Generar reporte estadístico | Jefatura · Analista de Seguridad |
+| CU-07 | Desplegar alertas de seguridad | Personal de Campo · Jefatura |
 
-Encabezados aceptados (se normalizan): `fecha, categoria, latitud, longitud, zona, direccion, descripcion`.
+## Puesta en Marcha
 
-Columna `categoria` debe contener uno de los códigos registrados en la base (ver `/datos`, panel derecho) o el nombre exacto. Ej: `ROBO_VIOLENTO`, `HURTO`, `ROBO_VEHICULO`, etc.
+### 1. Clonar e instalar dependencias
 
-Incluye un archivo de muestra en [sample-data/incidentes-demo.csv](sample-data/incidentes-demo.csv).
-
-## Arquitectura
-
-```
-app/
-  (auth)/        login y registro
-  (dashboard)/   panel protegido por middleware
-  denunciar/     formulario público de denuncia ciudadana
-  api/           endpoints JSON
-components/      UI + dashboard nav + heatmap
-lib/             db, auth-utils, csv-parser, predictor (motor de análisis)
-prisma/          schema + seed
+```bash
+git clone https://github.com/vMeap/pred-crim.git
+cd pred-crim
+npm install
 ```
 
-El motor predictivo (`lib/predictor.ts`) aplica agregación espacial en grilla con decay temporal y pesos por categoría — equivalente funcional al motor C++ mencionado en el documento de casos de uso.
+### 2. Configurar variables de entorno
 
-## Próximos pasos
+Crear un archivo `.env` a partir del template:
 
-- Generación de PDF para reportes ejecutivos (CU-06)
-- WebSockets / Server-Sent Events para alertas push en vivo (CU-07)
-- Integración con PostGIS para consultas espaciales avanzadas
-- Comparativa de efectividad entre modelos publicados (HU 3.2)
+```bash
+cp .env.example .env
+```
+
+Completar las credenciales de Supabase (obtenibles en *Project Settings → Database → Connection string*) y un `AUTH_SECRET` aleatorio.
+
+### 3. Inicializar la base de datos
+
+```bash
+npm run db:push    # aplica el schema en Supabase
+npm run db:seed    # carga 6 usuarios demo + 800 incidentes en V Región
+```
+
+### 4. Levantar el servidor de desarrollo
+
+```bash
+npm run dev
+```
+
+La aplicación quedará disponible en [http://localhost:3000](http://localhost:3000).
+
+## Cuentas Demo
+
+Disponibles tras ejecutar el seed:
+
+| Rol | Correo | Contraseña |
+|-----|--------|-----------|
+| Administrador | admin@predcrim.cl | admin123 |
+| Analista de Datos | datos@predcrim.cl | datos123 |
+| Analista de Seguridad | seguridad@predcrim.cl | seg123 |
+| Jefatura / Decisor | jefatura@predcrim.cl | jefe123 |
+| Personal de Campo | campo@predcrim.cl | campo123 |
+| Ciudadano | ciudadano@predcrim.cl | ciudadano123 |
+
+## Flujo de Demostración
+
+1. Ingresar como **Analista de Seguridad** → `/configuracion` → crear y activar una configuración.
+2. Ir a `/modelos` → ejecutar entrenamiento → publicar el modelo (se generan alertas automáticas).
+3. Ingresar como **Jefatura** → `/mapa` para el heatmap, `/reportes` para los indicadores.
+4. Ingresar como **Personal de Campo** → `/alertas` para confirmar recepción en terreno.
+
+## Equipo de Trabajo
+
+| Integrante | Rol |
+|------------|-----|
+| Jordán Acuña | Product Owner |
+| Kevin Soto | Scrum Master |
+| Diego Rubilar | Developer |
 
 ---
 
-Grupo 7 · Facultad de Ingeniería UNAB
+*Facultad de Ingeniería · Universidad Andrés Bello · Grupo 7*
