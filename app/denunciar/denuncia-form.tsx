@@ -1,10 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, CheckCircle2 } from "lucide-react";
+
+const LocationPicker = dynamic(() => import("@/components/location-picker"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-72 items-center justify-center text-sm text-muted-foreground">
+      Cargando mapa…
+    </div>
+  ),
+});
+
+const CENTER: [number, number] = [
+  parseFloat(process.env.NEXT_PUBLIC_MAP_CENTER_LAT ?? "-33.035"),
+  parseFloat(process.env.NEXT_PUBLIC_MAP_CENTER_LNG ?? "-71.58"),
+];
 
 export function DenunciaForm({ categories }: { categories: { code: string; name: string }[] }) {
   const [loading, setLoading] = useState(false);
@@ -29,14 +44,13 @@ export function DenunciaForm({ categories }: { categories: { code: string; name:
     e.preventDefault();
     setError(null);
     setSuccess(null);
-    const form = new FormData(e.currentTarget);
-    const lat = parseFloat(String(form.get("latitude") || ""));
-    const lng = parseFloat(String(form.get("longitude") || ""));
-    if (Number.isNaN(lat) || Number.isNaN(lng)) {
-      setError("Ingresa una latitud y longitud válidas o usa el botón 'Usar mi ubicación'.");
+
+    if (!coords) {
+      setError("Selecciona la ubicación en el mapa.");
       return;
     }
 
+    const form = new FormData(e.currentTarget);
     setLoading(true);
     const res = await fetch("/api/reports", {
       method: "POST",
@@ -46,8 +60,8 @@ export function DenunciaForm({ categories }: { categories: { code: string; name:
         reporterContact: form.get("reporterContact") || null,
         categoryCode: form.get("categoryCode"),
         occurredAt: form.get("occurredAt"),
-        latitude: lat,
-        longitude: lng,
+        latitude: coords.lat,
+        longitude: coords.lng,
         address: form.get("address") || null,
         description: form.get("description"),
       }),
@@ -112,39 +126,31 @@ export function DenunciaForm({ categories }: { categories: { code: string; name:
       </div>
 
       <div className="rounded-md border border-border bg-card p-4">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-2 flex items-center justify-between">
           <p className="text-sm font-medium">Ubicación geográfica *</p>
           <Button type="button" variant="outline" size="sm" onClick={useMyLocation}>
             <MapPin className="h-4 w-4" />
             Usar mi ubicación
           </Button>
         </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="latitude">Latitud</Label>
-            <Input
-              id="latitude"
-              name="latitude"
-              required
-              step="any"
-              value={coords?.lat ?? ""}
-              onChange={(e) =>
-                setCoords({ lat: parseFloat(e.target.value), lng: coords?.lng ?? 0 })
-              }
-            />
+        <p className="mb-3 text-xs text-muted-foreground">
+          Haz clic sobre el mapa para marcar la zona donde ocurrió el incidente.
+        </p>
+        <div className="h-72 overflow-hidden rounded-md border border-border">
+          <LocationPicker value={coords} onChange={setCoords} center={CENTER} zoom={13} />
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-muted-foreground">
+          <div>
+            Latitud:{" "}
+            <span className="font-mono text-foreground">
+              {coords ? coords.lat.toFixed(5) : "—"}
+            </span>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="longitude">Longitud</Label>
-            <Input
-              id="longitude"
-              name="longitude"
-              required
-              step="any"
-              value={coords?.lng ?? ""}
-              onChange={(e) =>
-                setCoords({ lat: coords?.lat ?? 0, lng: parseFloat(e.target.value) })
-              }
-            />
+          <div>
+            Longitud:{" "}
+            <span className="font-mono text-foreground">
+              {coords ? coords.lng.toFixed(5) : "—"}
+            </span>
           </div>
         </div>
         {geoError && <p className="mt-2 text-xs text-destructive">{geoError}</p>}
