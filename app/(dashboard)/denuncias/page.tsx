@@ -11,6 +11,20 @@ export default async function DenunciasPage() {
   const reports = await prisma.citizenReport.findMany({
     orderBy: [{ status: "asc" }, { createdAt: "desc" }],
     take: 100,
+    select: {
+      id: true,
+      reporterName: true,
+      reporterContact: true,
+      categoryCode: true,
+      description: true,
+      address: true,
+      latitude: true,
+      longitude: true,
+      occurredAt: true,
+      createdAt: true,
+      reviewNote: true,
+      status: true,
+    },
   });
 
   const pending = reports.filter((r) => r.status === "PENDING").length;

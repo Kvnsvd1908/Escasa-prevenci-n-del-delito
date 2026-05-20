@@ -9,16 +9,26 @@ import { ActivateButton } from "./activate-button";
 export default async function ConfigPage() {
   await requireRole("ANALISTA_SEGURIDAD");
 
-  const [configs, categories] = await Promise.all([
+  const [configs, categories] = await prisma.$transaction([
     prisma.analysisConfig.findMany({
       orderBy: { createdAt: "desc" },
-      include: {
-        weights: { include: { category: true } },
-        createdBy: true,
+      select: {
+        id: true,
+        name: true,
+        fromDate: true,
+        toDate: true,
+        riskThreshold: true,
+        active: true,
+        createdAt: true,
+        createdBy: { select: { name: true } },
+        _count: { select: { weights: true } },
       },
       take: 10,
     }),
-    prisma.crimeCategory.findMany({ orderBy: { name: "asc" } }),
+    prisma.crimeCategory.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, code: true, name: true },
+    }),
   ]);
 
   return (
@@ -92,7 +102,7 @@ export default async function ConfigPage() {
                   <td className="px-5 py-3 text-muted-foreground">
                     {formatDate(c.fromDate)} → {formatDate(c.toDate)}
                   </td>
-                  <td className="px-5 py-3 text-muted-foreground">{c.weights.length}</td>
+                  <td className="px-5 py-3 text-muted-foreground">{c._count.weights}</td>
                   <td className="px-5 py-3">{(c.riskThreshold * 100).toFixed(0)}%</td>
                   <td className="px-5 py-3">
                     {c.active ? <Badge variant="success">Activa</Badge> : <Badge variant="outline">Inactiva</Badge>}

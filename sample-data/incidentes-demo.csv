@@ -1,11 +1,11 @@
 fecha,categoria,latitud,longitud,zona,direccion,descripcion
-2026-04-01T22:15:00,ROBO_VIOLENTO,-33.4489,-70.6693,Centro,Plaza de Armas 100,Asalto a transeunte
-2026-04-02T03:40:00,ROBO_VEHICULO,-33.4512,-70.6650,Centro,Calle Ahumada 345,Sustracción de vehículo estacionado
-2026-04-02T19:05:00,HURTO,-33.4401,-70.6580,Providencia,Av. Providencia 1200,Hurto en local comercial
-2026-04-03T21:30:00,ROBO_INTIMIDACION,-33.4521,-70.6711,Estación Central,Alameda 4100,Amenaza con arma blanca
-2026-04-04T02:15:00,ROBO_VIVIENDA,-33.4602,-70.6501,San Miguel,Gran Avenida 5500,Robo nocturno a vivienda
-2026-04-05T13:45:00,HURTO,-33.4478,-70.6720,Centro,Calle Estado 200,Hurto de celular
-2026-04-06T23:50:00,LESIONES,-33.4390,-70.6610,Providencia,Pío Nono 150,Riña en vía pública
-2026-04-07T01:20:00,ROBO_VIOLENTO,-33.4499,-70.6675,Centro,Calle Compañía 900,Asalto con arma
-2026-04-08T20:10:00,DROGAS,-33.4555,-70.6800,Estación Central,Exposición 1000,Tráfico en vía pública
-2026-04-09T04:30:00,ROBO_VEHICULO,-33.4705,-70.6450,San Miguel,Gran Avenida 7200,Portonazo
+2026-04-01T22:15:00,ROBO_INTIMIDACION,-33.0472,-71.6127,Valparaiso - Plan,"Plaza Victoria, Valparaiso","Amenaza a transeunte en zona centrica"
+2026-04-02T03:40:00,ROBO_VEHICULO,-33.0512,-71.5887,Valparaiso - Cerro Baron,"Avenida Argentina, Cerro Baron","Robo de accesorios desde vehiculo estacionado"
+2026-04-02T19:05:00,HURTO,-33.0245,-71.5518,Vina del Mar - Centro,"Plaza Vergara, Vina del Mar","Hurto de telefono en sector comercial"
+2026-04-03T21:30:00,ROBO_VIVIENDA,-33.0298,-71.5765,Vina del Mar - Recreo,"Calle Once, Recreo","Ingreso a vivienda en sector residencial"
+2026-04-04T20:10:00,ROBO_VEHICULO,-32.9237,-71.5176,Concon - Centro,"Avenida Concon Renaca, Concon","Intento de robo de vehiculo"
+2026-04-05T13:45:00,HURTO,-33.0472,-71.4422,Quilpue - Centro,"Plaza Eugenio Rengifo, Quilpue","Hurto en zona comercial"
+2026-04-06T23:50:00,LESIONES,-33.0444,-71.3733,Villa Alemana - Centro,"Plaza Belen, Villa Alemana","Rina en via publica"
+2026-04-07T01:20:00,ROBO_VIVIENDA,-33.0363,-71.3495,Villa Alemana - Penablanca,"Penablanca, Villa Alemana","Robo nocturno en domicilio"
+2026-04-08T20:10:00,DROGAS,-32.8817,-71.2487,Quillota - Centro,"Plaza de Armas, Quillota","Denuncia por microtrafico en punto recurrente"
+2026-04-09T04:30:00,ROBO_VEHICULO,-33.5947,-71.6072,San Antonio - Centro,"Centro de San Antonio","Robo de vehiculo estacionado"

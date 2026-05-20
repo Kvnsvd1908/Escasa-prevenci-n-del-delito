@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertList } from "./alert-list";
+import type { Prisma } from "@prisma/client";
 
 export default async function AlertasPage() {
   const user = await requireUser();
@@ -11,9 +12,9 @@ export default async function AlertasPage() {
   const isField = user.role === "PERSONAL_CAMPO";
   const isHQ = user.role === "JEFATURA" || user.role === "ANALISTA_SEGURIDAD" || user.role === "ADMIN";
 
-  type AlertWithDeliveries = Awaited<
-    ReturnType<typeof prisma.alert.findMany<{ include: { deliveries: true } }>>
-  >[number];
+  type AlertWithDeliveries = Prisma.AlertGetPayload<{
+    include: { deliveries: { select: { userId: true; acknowledged: true } } };
+  }>;
 
   let alerts: AlertWithDeliveries[] = [];
   if (isField) {
@@ -21,13 +22,13 @@ export default async function AlertasPage() {
       where: { deliveries: { some: { userId: user.id } } },
       orderBy: [{ status: "asc" }, { createdAt: "desc" }],
       take: 50,
-      include: { deliveries: true },
+      include: { deliveries: { select: { userId: true, acknowledged: true } } },
     });
   } else if (isHQ) {
     alerts = await prisma.alert.findMany({
       orderBy: [{ status: "asc" }, { createdAt: "desc" }],
       take: 50,
-      include: { deliveries: true },
+      include: { deliveries: { select: { userId: true, acknowledged: true } } },
     });
   }
 

@@ -8,13 +8,23 @@ import { AlertTriangle, Database, FileInput, Shield, Brain } from "lucide-react"
 export default async function DashboardHome() {
   const user = await requireUser();
 
-  const [incidentsCount, pendingReports, publishedModel, openAlerts, categoriesCount, lastUpload] = await Promise.all([
+  const [incidentsCount, pendingReports, publishedModel, openAlerts, categoriesCount, lastUpload] = await prisma.$transaction([
     prisma.incident.count(),
     prisma.citizenReport.count({ where: { status: "PENDING" } }),
-    prisma.predictiveModel.findFirst({ where: { status: "PUBLISHED" }, orderBy: { publishedAt: "desc" } }),
+    prisma.predictiveModel.findFirst({
+      where: { status: "PUBLISHED" },
+      orderBy: { publishedAt: "desc" },
+      select: { publishedAt: true },
+    }),
     prisma.alert.count({ where: { status: "OPEN" } }),
     prisma.crimeCategory.count(),
-    prisma.incidentUpload.findFirst({ orderBy: { createdAt: "desc" }, include: { uploadedBy: true } }),
+    prisma.incidentUpload.findFirst({
+      orderBy: { createdAt: "desc" },
+      select: {
+        createdAt: true,
+        uploadedBy: { select: { name: true } },
+      },
+    }),
   ]);
 
   return (

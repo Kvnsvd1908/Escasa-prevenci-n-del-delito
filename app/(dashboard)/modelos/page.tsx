@@ -8,17 +8,30 @@ import { TrainButton, PublishButton } from "./actions";
 export default async function ModelosPage() {
   await requireRole("ANALISTA_SEGURIDAD");
 
-  const [activeConfig, models] = await Promise.all([
+  const [activeConfig, models] = await prisma.$transaction([
     prisma.analysisConfig.findFirst({
       where: { active: true },
-      include: { weights: { include: { category: true } } },
+      select: {
+        id: true,
+        name: true,
+        fromDate: true,
+        toDate: true,
+        zoneFilter: true,
+        gridSize: true,
+        riskThreshold: true,
+      },
     }),
     prisma.predictiveModel.findMany({
       orderBy: { createdAt: "desc" },
       take: 10,
-      include: {
-        config: true,
-        trainedBy: true,
+      select: {
+        id: true,
+        status: true,
+        accuracy: true,
+        sampleSize: true,
+        createdAt: true,
+        config: { select: { name: true } },
+        trainedBy: { select: { name: true } },
         _count: { select: { predictions: true } },
       },
     }),

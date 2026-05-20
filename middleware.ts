@@ -5,7 +5,7 @@ import { authConfig } from "./auth.config";
 
 const { auth } = NextAuth(authConfig);
 
-const PUBLIC_PATHS = ["/", "/login", "/register", "/denunciar", "/api/auth", "/api/reports"];
+const PUBLIC_PATHS = ["/", "/login", "/register", "/denunciar", "/api/auth", "/api/reports", "/api/geocode"];
 const AUTH_REDIRECT = "/login";
 
 const ROLE_ROUTES: Record<Role, string[]> = {

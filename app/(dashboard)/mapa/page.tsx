@@ -11,7 +11,11 @@ export default async function MapaPage() {
   const model = await prisma.predictiveModel.findFirst({
     where: { status: "PUBLISHED" },
     orderBy: { publishedAt: "desc" },
-    include: { config: true },
+    select: {
+      id: true,
+      publishedAt: true,
+      config: { select: { name: true } },
+    },
   });
 
   let predictions: { latitude: number; longitude: number; riskScore: number; dominantCategory: string | null; hourOfDay: number | null }[] = [];
@@ -20,6 +24,13 @@ export default async function MapaPage() {
       where: { modelId: model.id },
       orderBy: { riskScore: "desc" },
       take: 2000,
+      select: {
+        latitude: true,
+        longitude: true,
+        riskScore: true,
+        dominantCategory: true,
+        hourOfDay: true,
+      },
     });
   }
 

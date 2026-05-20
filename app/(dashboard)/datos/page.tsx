@@ -8,13 +8,24 @@ import { UploadForm } from "./upload-form";
 export default async function DatosPage() {
   await requireRole("ANALISTA_DATOS");
 
-  const [uploads, categories] = await Promise.all([
+  const [uploads, categories] = await prisma.$transaction([
     prisma.incidentUpload.findMany({
       orderBy: { createdAt: "desc" },
       take: 10,
-      include: { uploadedBy: true },
+      select: {
+        id: true,
+        filename: true,
+        totalRows: true,
+        acceptedRows: true,
+        rejectedRows: true,
+        createdAt: true,
+        uploadedBy: { select: { name: true } },
+      },
     }),
-    prisma.crimeCategory.findMany({ orderBy: { name: "asc" } }),
+    prisma.crimeCategory.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, code: true, name: true },
+    }),
   ]);
 
   return (

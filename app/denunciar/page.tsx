@@ -6,7 +6,10 @@ import { DenunciaForm } from "./denuncia-form";
 export const dynamic = "force-dynamic";
 
 export default async function DenunciarPage() {
-  const categories = await prisma.crimeCategory.findMany({ orderBy: { name: "asc" } });
+  const categories = await prisma.crimeCategory.findMany({
+    orderBy: { name: "asc" },
+    select: { code: true, name: true },
+  });
 
   return (
     <main className="min-h-screen">

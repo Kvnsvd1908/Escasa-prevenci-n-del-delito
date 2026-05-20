@@ -69,6 +69,23 @@ function HeatControlLayer({ points }: { points: HeatPoint[] }) {
   return null;
 }
 
+function FitBounds({ points }: { points: HeatPoint[] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (points.length < 2) return;
+
+    const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number]));
+    map.fitBounds(bounds, {
+      padding: [32, 32],
+      maxZoom: 12,
+      animate: false,
+    });
+  }, [map, points]);
+
+  return null;
+}
+
 export default function Heatmap({ points, center, zoom, showMarkers = true }: Props) {
   return (
     <MapContainer
@@ -81,6 +98,7 @@ export default function Heatmap({ points, center, zoom, showMarkers = true }: Pr
         attribution='&copy; OpenStreetMap · CARTO'
         url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
+      <FitBounds points={points} />
       <HeatControlLayer points={points} />
       {showMarkers &&
         points

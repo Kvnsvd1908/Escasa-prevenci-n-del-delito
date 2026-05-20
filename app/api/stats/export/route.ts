@@ -27,7 +27,7 @@ export async function GET(req: Request) {
       ...(categoryCode ? { category: { code: categoryCode } } : {}),
       ...(zone ? { zone } : {}),
     },
-    include: { category: true },
+    include: { category: { select: { code: true, name: true } } },
     orderBy: { occurredAt: "desc" },
   });
 

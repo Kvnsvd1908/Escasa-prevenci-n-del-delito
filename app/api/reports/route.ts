@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { auth } from "@/auth";
+import { reverseGeocode } from "@/lib/reverse-geocode";
 
 const schema = z.object({
   reporterName: z.string().optional().nullable(),
@@ -28,6 +29,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Fecha inválida" }, { status: 400 });
   }
 
+  const submittedAddress = parsed.data.address?.trim() || null;
+  const reverseAddress = submittedAddress
+    ? null
+    : (await reverseGeocode(parsed.data.latitude, parsed.data.longitude)).displayName;
+
   const report = await prisma.citizenReport.create({
     data: {
       reporterId: session?.user?.id ?? null,
@@ -37,7 +43,7 @@ export async function POST(req: Request) {
       occurredAt,
       latitude: parsed.data.latitude,
       longitude: parsed.data.longitude,
-      address: parsed.data.address ?? null,
+      address: submittedAddress ?? reverseAddress,
       description: parsed.data.description,
     },
   });
@@ -54,6 +60,19 @@ export async function GET() {
   const reports = await prisma.citizenReport.findMany({
     orderBy: { createdAt: "desc" },
     take: 100,
+    select: {
+      id: true,
+      reporterName: true,
+      reporterContact: true,
+      categoryCode: true,
+      occurredAt: true,
+      latitude: true,
+      longitude: true,
+      address: true,
+      description: true,
+      status: true,
+      createdAt: true,
+    },
   });
   return NextResponse.json({ reports });
 }

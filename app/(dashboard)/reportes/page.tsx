@@ -16,12 +16,12 @@ async function getReportData(params: { fromDate: string; toDate: string; categor
     ...(params.zone ? { zone: params.zone } : {}),
   };
 
-  const [total, byCategory, byHour, byZone, byMonth] = await Promise.all([
+  const [total, byCategory, byHour, byZone, byMonth, catMap] = await prisma.$transaction([
     prisma.incident.count({ where }),
     prisma.incident.groupBy({
       by: ["categoryId"],
       where,
-      _count: true,
+      _count: { categoryId: true },
       orderBy: { _count: { categoryId: "desc" } },
     }),
     prisma.$queryRaw<{ hour: number; count: bigint }[]>`
@@ -34,7 +34,7 @@ async function getReportData(params: { fromDate: string; toDate: string; categor
     prisma.incident.groupBy({
       by: ["zone"],
       where: { ...where, zone: { not: null } },
-      _count: true,
+      _count: { zone: true },
       orderBy: { _count: { zone: "desc" } },
       take: 10,
     }),
@@ -45,9 +45,11 @@ async function getReportData(params: { fromDate: string; toDate: string; categor
       GROUP BY month
       ORDER BY month
     `,
+    prisma.crimeCategory.findMany({
+      select: { id: true, code: true, name: true },
+    }),
   ]);
 
-  const catMap = await prisma.crimeCategory.findMany();
   const catById = new Map(catMap.map((c) => [c.id, c]));
 
   return {
@@ -55,10 +57,10 @@ async function getReportData(params: { fromDate: string; toDate: string; categor
     byCategory: byCategory.map((r) => ({
       code: catById.get(r.categoryId)?.code ?? "—",
       name: catById.get(r.categoryId)?.name ?? "—",
-      count: r._count,
+      count: (r._count as { categoryId: number }).categoryId,
     })),
     byHour: byHour.map((r) => ({ hour: r.hour, count: Number(r.count) })),
-    byZone: byZone.map((r) => ({ zone: r.zone ?? "Sin zona", count: r._count })),
+    byZone: byZone.map((r) => ({ zone: r.zone ?? "Sin zona", count: (r._count as { zone: number }).zone })),
     byMonth: byMonth.map((r) => ({ month: r.month, count: Number(r.count) })),
   };
 }
@@ -79,7 +81,10 @@ export default async function ReportesPage({
 
   const [data, categories, zones] = await Promise.all([
     getReportData({ fromDate, toDate, category: searchParams.category, zone: searchParams.zone }),
-    prisma.crimeCategory.findMany({ orderBy: { name: "asc" } }),
+    prisma.crimeCategory.findMany({
+      orderBy: { name: "asc" },
+      select: { code: true, name: true },
+    }),
     prisma.incident.findMany({ where: { zone: { not: null } }, distinct: ["zone"], select: { zone: true } }),
   ]);
 

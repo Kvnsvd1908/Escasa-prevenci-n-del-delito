@@ -34,6 +34,8 @@ Este proyecto se desarrolla en el marco de la carrera de Ingeniería en Computac
 
 ## Funcionalidades Implementadas y Planificadas
 
+> Ver detalle de mejoras recientes en [CHANGELOG.md](./CHANGELOG.md).
+
 ### Gestión e Integración de Datos
 
 - Importación de registros históricos en formatos estandarizados (CSV).
@@ -88,7 +90,7 @@ Completar las credenciales de Supabase (obtenibles en *Project Settings → Data
 
 ```bash
 npm run db:push    # aplica el schema en Supabase
-npm run db:seed    # carga 6 usuarios demo + 800 incidentes en V Región
+npm run db:seed    # carga 6 usuarios demo + 900 incidentes coherentes en V Region
 ```
 
 ### 4. Levantar el servidor de desarrollo

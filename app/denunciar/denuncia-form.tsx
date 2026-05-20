@@ -27,6 +27,29 @@ export function DenunciaForm({ categories }: { categories: { code: string; name:
   const [success, setSuccess] = useState<string | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
+  const [address, setAddress] = useState("");
+  const [addressTouched, setAddressTouched] = useState(false);
+  const [resolvingAddress, setResolvingAddress] = useState(false);
+
+  async function resolveAddress(nextCoords: { lat: number; lng: number }) {
+    if (addressTouched) return;
+
+    setResolvingAddress(true);
+    const res = await fetch(
+      `/api/geocode/reverse?lat=${nextCoords.lat}&lng=${nextCoords.lng}`,
+      { cache: "no-store" }
+    ).catch(() => null);
+    setResolvingAddress(false);
+
+    if (!res?.ok) return;
+    const data = (await res.json().catch(() => null)) as { displayName?: string | null } | null;
+    if (data?.displayName) setAddress(data.displayName);
+  }
+
+  function updateCoords(nextCoords: { lat: number; lng: number }) {
+    setCoords(nextCoords);
+    void resolveAddress(nextCoords);
+  }
 
   function useMyLocation() {
     setGeoError(null);
@@ -35,7 +58,7 @@ export function DenunciaForm({ categories }: { categories: { code: string; name:
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => updateCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       (err) => setGeoError(err.message)
     );
   }
@@ -62,7 +85,7 @@ export function DenunciaForm({ categories }: { categories: { code: string; name:
         occurredAt: form.get("occurredAt"),
         latitude: coords.lat,
         longitude: coords.lng,
-        address: form.get("address") || null,
+        address: address.trim() || null,
         description: form.get("description"),
       }),
     });
@@ -77,6 +100,8 @@ export function DenunciaForm({ categories }: { categories: { code: string; name:
     setSuccess(`Reporte recibido. Código de seguimiento: ${id.slice(0, 8).toUpperCase()}`);
     (e.target as HTMLFormElement).reset();
     setCoords(null);
+    setAddress("");
+    setAddressTouched(false);
   }
 
   return (
@@ -122,7 +147,19 @@ export function DenunciaForm({ categories }: { categories: { code: string; name:
 
       <div className="space-y-1.5">
         <Label htmlFor="address">Dirección o referencia (opcional)</Label>
-        <Input id="address" name="address" placeholder="Calle, número, comuna…" />
+        <Input
+          id="address"
+          name="address"
+          value={address}
+          onChange={(event) => {
+            setAddress(event.target.value);
+            setAddressTouched(true);
+          }}
+          placeholder={resolvingAddress ? "Buscando direccion..." : "Calle, numero, comuna..."}
+        />
+        <p className="text-xs text-muted-foreground">
+          Si marcas el punto en el mapa, intentaremos completar esta direccion automaticamente.
+        </p>
       </div>
 
       <div className="rounded-md border border-border bg-card p-4">
@@ -137,7 +174,7 @@ export function DenunciaForm({ categories }: { categories: { code: string; name:
           Haz clic sobre el mapa para marcar la zona donde ocurrió el incidente.
         </p>
         <div className="h-72 overflow-hidden rounded-md border border-border">
-          <LocationPicker value={coords} onChange={setCoords} center={CENTER} zoom={13} />
+          <LocationPicker value={coords} onChange={updateCoords} center={CENTER} zoom={13} />
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-muted-foreground">
           <div>
