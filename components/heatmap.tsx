@@ -35,6 +35,19 @@ function toFeatureCollection(points: HeatPoint[]): GeoJSON.FeatureCollection<Geo
   };
 }
 
+function formatCategory(category: string) {
+  if (!category || category === "Sin categoria") return "Sin categoria";
+  const normalized = category.replaceAll("_", " ").toLowerCase();
+  return normalized.replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function riskLevel(score: number) {
+  if (score >= 0.8) return "Alto";
+  if (score >= 0.6) return "Medio alto";
+  if (score >= 0.4) return "Medio";
+  return "Bajo";
+}
+
 export default function Heatmap({ points, center, zoom, showMarkers = true }: Props) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -166,13 +179,27 @@ export default function Heatmap({ points, center, zoom, showMarkers = true }: Pr
           const coordinates = feature.geometry.coordinates as [number, number];
           const riskScore = Number(feature.properties?.riskScore ?? 0);
           const category = String(feature.properties?.category ?? "Sin categoria");
+          const popupContent = document.createElement("div");
+          popupContent.className = "risk-popup-content";
+
+          const riskText = document.createElement("div");
+          riskText.className = "risk-popup-risk";
+          riskText.textContent = `Riesgo ${riskLevel(riskScore)} (${(riskScore * 100).toFixed(0)}%)`;
+
+          const categoryText = document.createElement("div");
+          categoryText.className = "risk-popup-category";
+          categoryText.textContent = `Categoria: ${formatCategory(category)}`;
+
+          popupContent.append(riskText, categoryText);
 
           popupRef.current?.remove();
-          popupRef.current = new mapboxgl.Popup({ closeButton: false, offset: 14 })
+          popupRef.current = new mapboxgl.Popup({
+            closeButton: false,
+            className: "risk-map-popup",
+            offset: 14,
+          })
             .setLngLat(coordinates)
-            .setHTML(
-              `<div style="font-size:12px;line-height:1.45"><b>Riesgo ${(riskScore * 100).toFixed(0)}%</b><br/>Categoria: ${category}</div>`
-            )
+            .setDOMContent(popupContent)
             .addTo(map);
         });
       }
