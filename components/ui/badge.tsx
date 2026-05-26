@@ -3,11 +3,11 @@ import { cn } from "@/lib/utils";
 type Variant = "default" | "success" | "warning" | "danger" | "outline";
 
 const variants: Record<Variant, string> = {
-  default: "bg-primary/15 text-primary",
-  success: "bg-success/15 text-success",
-  warning: "bg-warning/15 text-warning",
-  danger: "bg-destructive/15 text-destructive",
-  outline: "border border-border text-muted-foreground",
+  default: "border border-primary/30 bg-primary/10 text-primary",
+  success: "border border-success/30 bg-success/10 text-success",
+  warning: "border border-warning/35 bg-warning/10 text-warning",
+  danger: "border border-destructive/35 bg-destructive/10 text-destructive",
+  outline: "border border-border bg-secondary/40 text-muted-foreground",
 };
 
 export function Badge({
@@ -18,7 +18,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
+        "inline-flex items-center rounded-sm px-2.5 py-0.5 text-xs font-semibold",
         variants[variant],
         className
       )}

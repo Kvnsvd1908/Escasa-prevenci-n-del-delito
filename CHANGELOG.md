@@ -1,5 +1,27 @@
 # Cambios recientes
 
+## Release v0.1.1 - 2026-05-26
+
+Rediseño visual orientado a una experiencia mas profesional, institucional y conectada con investigacion policial.
+
+### Cambios principales
+
+- Se rediseño la landing de PRED-CRIM con estetica de centro de mando preventivo, monitor regional, lenguaje operativo y llamadas a accion mas claras.
+- Se actualizo el panel principal del dashboard para sentirse como sala de analisis operativo, con indicadores de incidentes, denuncias, modelo activo y alertas.
+- Se rediseño la navegacion lateral con identidad de comando policial, estados activos mas visibles y secciones por modulos operativos.
+- Se actualizo la pantalla de login con apariencia de acceso seguro institucional.
+- Se mejoro la pantalla publica de denuncia para presentarla como recepcion de antecedentes ciudadanos.
+- Se ajusto la paleta global, tarjetas, badges, botones e inputs para una interfaz mas sobria, tactica y consistente.
+- Se añadieron estilos globales de grilla, superficies tipo consola e indicadores visuales de riesgo/evidencia.
+- Se actualizo la metadata de la app a "PRED-CRIM - Inteligencia Policial".
+- Se elimino un layout accidental dentro de `/denunciar` que podia provocar advertencias de hidratacion.
+
+### Validacion
+
+- `npm run type-check` sin errores.
+- `npm run lint` sin errores bloqueantes; se mantienen dos advertencias preexistentes de hooks en componentes de mapa.
+- Verificacion HTTP local de `/`, `/login` y `/denunciar` con respuesta `200 OK`.
+
 Resumen de mejoras incorporadas al proyecto PRED-CRIM durante la ultima iteracion de desarrollo.
 
 ## Notificaciones de denuncias ciudadanas

@@ -3,8 +3,8 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "PRED-CRIM — Análisis Predictivo del Delito",
-  description: "Sistema de prevención delictiva basado en análisis de datos.",
+  title: "PRED-CRIM - Inteligencia Policial",
+  description: "Sistema de apoyo investigativo y prevencion delictiva basado en analisis de datos.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

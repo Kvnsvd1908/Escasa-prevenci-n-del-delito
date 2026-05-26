@@ -36,13 +36,25 @@ export function DashboardNav({
   const visible = LINKS.filter((l) => l.roles.includes(user.role) || user.role === "ADMIN");
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-border bg-card">
-      <div className="flex items-center gap-2 border-b border-border px-5 py-4">
-        <Shield className="h-6 w-6 text-primary" />
-        <span className="text-lg font-bold">PRED-CRIM</span>
+    <aside className="flex h-auto w-full flex-col border-b border-border bg-card/95 shadow-2xl lg:h-screen lg:w-72 lg:border-b-0 lg:border-r">
+      <div className="border-b border-border px-5 py-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-md border border-primary/35 bg-primary/10">
+            <Shield className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <span className="block text-sm font-black tracking-[0.24em]">PRED-CRIM</span>
+            <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+              Comando policial
+            </span>
+          </div>
+        </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3">
+        <p className="px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+          Modulos operativos
+        </p>
         {visible.map((l) => {
           const active = pathname === l.href || pathname?.startsWith(l.href + "/");
           const Icon = l.icon;
@@ -51,10 +63,10 @@ export function DashboardNav({
               key={l.href}
               href={l.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition",
+                "mb-1 flex items-center gap-3 rounded-md border px-3 py-2.5 text-sm transition",
                 active
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                  ? "border-primary/35 bg-primary/15 text-primary shadow-[inset_3px_0_0_hsl(204_94%_58%)]"
+                  : "border-transparent text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground"
               )}
             >
               <Icon className="h-4 w-4" />
@@ -68,7 +80,10 @@ export function DashboardNav({
       </nav>
 
       <div className="border-t border-border p-3">
-        <div className="mb-2 rounded-md bg-background p-3">
+        <div className="mb-2 rounded-md border border-border bg-background/80 p-3">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+            Sesion activa
+          </p>
           <p className="text-sm font-medium truncate">{user.name ?? user.email}</p>
           <p className="text-xs text-muted-foreground">{ROLE_LABEL[user.role]}</p>
         </div>

@@ -6,7 +6,7 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
     <input
       ref={ref}
       className={cn(
-        "flex h-10 w-full rounded-md border border-border bg-input px-3 py-2 text-sm outline-none transition placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50",
+        "flex h-10 w-full rounded-md border border-border bg-input/90 px-3 py-2 text-sm outline-none transition placeholder:text-muted-foreground focus-visible:border-primary/70 focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50",
         className
       )}
       {...props}
@@ -20,7 +20,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTML
     <textarea
       ref={ref}
       className={cn(
-        "flex w-full rounded-md border border-border bg-input px-3 py-2 text-sm outline-none transition placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50",
+        "flex w-full rounded-md border border-border bg-input/90 px-3 py-2 text-sm outline-none transition placeholder:text-muted-foreground focus-visible:border-primary/70 focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50",
         className
       )}
       {...props}
@@ -34,7 +34,7 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
     <select
       ref={ref}
       className={cn(
-        "flex h-10 w-full rounded-md border border-border bg-input px-3 py-2 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50",
+        "flex h-10 w-full rounded-md border border-border bg-input/90 px-3 py-2 text-sm outline-none transition focus-visible:border-primary/70 focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50",
         className
       )}
       {...props}

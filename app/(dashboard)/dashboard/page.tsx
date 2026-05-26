@@ -1,9 +1,9 @@
 import { requireUser } from "@/lib/auth-utils";
 import { prisma } from "@/lib/db";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, formatNumber, ROLE_LABEL } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Database, FileInput, Shield, Brain } from "lucide-react";
+import { AlertTriangle, Brain, Database, FileInput, Radio } from "lucide-react";
 
 export default async function DashboardHome() {
   const user = await requireUser();
@@ -29,49 +29,63 @@ export default async function DashboardHome() {
 
   return (
     <div className="space-y-8">
-      <header>
-        <p className="text-sm text-muted-foreground">{ROLE_LABEL[user.role]}</p>
-        <h1 className="text-3xl font-bold">Hola, {user.name ?? user.email}</h1>
-        <p className="mt-1 text-muted-foreground">
-          Vista general del sistema PRED-CRIM.
-        </p>
+      <header className="command-grid overflow-hidden rounded-md border border-border bg-card/70 p-6">
+        <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="mb-4 flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-primary">
+              <Radio className="h-4 w-4" />
+              Sala de analisis operativo
+            </div>
+            <p className="text-sm text-muted-foreground">{ROLE_LABEL[user.role]}</p>
+            <h1 className="mt-1 text-3xl font-black tracking-tight">
+              Panel de mando, {user.name ?? user.email}
+            </h1>
+            <p className="mt-2 max-w-2xl text-muted-foreground">
+              Estado consolidado de datos, denuncias, modelos y alertas para apoyar investigacion y despliegue policial.
+            </p>
+          </div>
+          <div className="rounded-md border border-primary/25 bg-primary/10 px-4 py-3 text-sm">
+            <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Sistema</p>
+            <p className="font-semibold text-primary">Operativo y en monitoreo</p>
+          </div>
+        </div>
       </header>
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Stat icon={<Database className="h-4 w-4" />} label="Incidentes registrados" value={formatNumber(incidentsCount)} />
-        <Stat icon={<FileInput className="h-4 w-4" />} label="Denuncias pendientes" value={formatNumber(pendingReports)} />
-        <Stat icon={<Brain className="h-4 w-4" />} label="Modelo activo" value={publishedModel ? "Sí" : "—"} hint={publishedModel ? formatDate(publishedModel.publishedAt) : "Sin publicar"} />
-        <Stat icon={<AlertTriangle className="h-4 w-4" />} label="Alertas abiertas" value={formatNumber(openAlerts)} />
+        <Stat icon={<Database className="h-4 w-4" />} label="Incidentes registrados" value={formatNumber(incidentsCount)} tone="primary" />
+        <Stat icon={<FileInput className="h-4 w-4" />} label="Denuncias pendientes" value={formatNumber(pendingReports)} tone="warning" />
+        <Stat icon={<Brain className="h-4 w-4" />} label="Modelo activo" value={publishedModel ? "Si" : "-"} hint={publishedModel ? formatDate(publishedModel.publishedAt) : "Sin publicar"} tone="success" />
+        <Stat icon={<AlertTriangle className="h-4 w-4" />} label="Alertas abiertas" value={formatNumber(openAlerts)} tone="danger" />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Casos de uso del sistema</CardTitle>
-            <CardDescription>Funcionalidad cubierta por la plataforma.</CardDescription>
+            <CardTitle>Cadena investigativa</CardTitle>
+            <CardDescription>Como fluye la informacion desde el antecedente hasta la decision operativa.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <CU code="CU-01" title="Cargar registros históricos" roles="Analista de Datos" />
-            <CU code="CU-02" title="Gestionar denuncias ciudadanas" roles="Ciudadano · Analista de Datos" />
-            <CU code="CU-03" title="Configurar parámetros de análisis" roles="Analista de Seguridad" />
+            <CU code="CU-01" title="Cargar registros historicos" roles="Analista de Datos" />
+            <CU code="CU-02" title="Gestionar denuncias ciudadanas" roles="Ciudadano - Analista de Datos" />
+            <CU code="CU-03" title="Configurar parametros de analisis" roles="Analista de Seguridad" />
             <CU code="CU-04" title="Ejecutar entrenamiento de modelo" roles="Analista de Seguridad" />
-            <CU code="CU-05" title="Visualizar mapa de calor" roles="Jefatura · Analista de Seguridad" />
-            <CU code="CU-06" title="Generar reporte estadístico" roles="Jefatura · Analista de Seguridad" />
-            <CU code="CU-07" title="Desplegar alertas de seguridad" roles="Personal de Campo · Jefatura" />
+            <CU code="CU-05" title="Visualizar mapa de calor" roles="Jefatura - Analista de Seguridad" />
+            <CU code="CU-06" title="Generar reporte estadistico" roles="Jefatura - Analista de Seguridad" />
+            <CU code="CU-07" title="Desplegar alertas de seguridad" roles="Personal de Campo - Jefatura" />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Estado</CardTitle>
-            <CardDescription>Indicadores operativos.</CardDescription>
+            <CardTitle>Estado operativo</CardTitle>
+            <CardDescription>Indicadores de preparacion del sistema.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <Row label="Categorías delictuales">{categoriesCount}</Row>
-            <Row label="Última carga">
+            <Row label="Categorias delictuales">{categoriesCount}</Row>
+            <Row label="Ultima carga">
               {lastUpload ? (
                 <span>
-                  {formatDate(lastUpload.createdAt)} · {lastUpload.uploadedBy.name}
+                  {formatDate(lastUpload.createdAt)} - {lastUpload.uploadedBy.name}
                 </span>
               ) : (
                 "Sin cargas"
@@ -80,7 +94,7 @@ export default async function DashboardHome() {
             <Row label="Modelo publicado">
               {publishedModel ? <Badge variant="success">Activo</Badge> : <Badge variant="outline">Ninguno</Badge>}
             </Row>
-            <Row label="Alertas críticas">
+            <Row label="Alertas criticas">
               {openAlerts > 0 ? <Badge variant="danger">{openAlerts} abiertas</Badge> : <Badge variant="success">Sin alertas</Badge>}
             </Row>
           </CardContent>
@@ -90,7 +104,28 @@ export default async function DashboardHome() {
   );
 }
 
-function Stat({ icon, label, value, hint }: { icon: React.ReactNode; label: string; value: string; hint?: string }) {
+function Stat({
+  icon,
+  label,
+  value,
+  hint,
+  tone,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  hint?: string;
+  tone: "primary" | "warning" | "success" | "danger";
+}) {
+  const toneClass =
+    tone === "warning"
+      ? "text-warning"
+      : tone === "success"
+        ? "text-success"
+        : tone === "danger"
+          ? "text-destructive"
+          : "text-primary";
+
   return (
     <Card>
       <CardContent className="p-5">
@@ -98,7 +133,7 @@ function Stat({ icon, label, value, hint }: { icon: React.ReactNode; label: stri
           {icon}
           {label}
         </div>
-        <div className="mt-2 text-3xl font-bold">{value}</div>
+        <div className={`mt-2 text-3xl font-black ${toneClass}`}>{value}</div>
         {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
       </CardContent>
     </Card>
@@ -107,7 +142,7 @@ function Stat({ icon, label, value, hint }: { icon: React.ReactNode; label: stri
 
 function CU({ code, title, roles }: { code: string; title: string; roles: string }) {
   return (
-    <div className="flex items-start justify-between gap-3 rounded-md border border-border bg-background p-3">
+    <div className="flex items-start justify-between gap-3 rounded-md border border-border bg-background/70 p-3 transition hover:border-primary/35">
       <div className="flex items-start gap-3">
         <Badge variant="outline" className="font-mono">{code}</Badge>
         <div>
@@ -121,9 +156,9 @@ function CU({ code, title, roles }: { code: string; title: string; roles: string
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between gap-4 rounded-md border border-border bg-background/60 px-3 py-2">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium">{children}</span>
+      <span className="text-right font-medium">{children}</span>
     </div>
   );
 }
