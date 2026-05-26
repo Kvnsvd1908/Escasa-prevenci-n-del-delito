@@ -58,10 +58,13 @@ export default function LocationPicker({ value, onChange, center, zoom = 13 }: P
     if (!markerRef.current) {
       const el = document.createElement("div");
       el.className = "mapbox-location-marker";
-      markerRef.current = new mapboxgl.Marker({ element: el, anchor: "center" }).addTo(map);
+      markerRef.current = new mapboxgl.Marker({ element: el, anchor: "center" })
+        .setLngLat([value.lng, value.lat])
+        .addTo(map);
+    } else {
+      markerRef.current.setLngLat([value.lng, value.lat]);
     }
 
-    markerRef.current.setLngLat([value.lng, value.lat]);
     map.flyTo({
       center: [value.lng, value.lat],
       zoom: Math.max(map.getZoom(), 14),
