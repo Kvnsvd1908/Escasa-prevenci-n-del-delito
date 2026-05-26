@@ -27,7 +27,7 @@ Este proyecto se desarrolla en el marco de la carrera de Ingeniería en Computac
 | Base de Datos | PostgreSQL (Supabase) |
 | ORM | Prisma 5 |
 | Autenticación | NextAuth v5 (JWT, control por rol) |
-| Visualización Geográfica | Leaflet + leaflet.heat |
+| Visualización Geográfica | Mapbox GL JS |
 | Estilos | Tailwind CSS |
 | Arquitectura | Modelo de Vistas 4+1 |
 | Gestión de Proyecto | Marco de trabajo Scrum coordinado en Jira |

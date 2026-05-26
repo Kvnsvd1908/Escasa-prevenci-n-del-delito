@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet.heat";
+import { useEffect, useMemo, useRef } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 export interface HeatPoint {
   lat: number;
@@ -19,111 +18,218 @@ interface Props {
   showMarkers?: boolean;
 }
 
-function riskColor(score: number) {
-  if (score >= 0.8) return "#ef4444";
-  if (score >= 0.6) return "#f97316";
-  if (score >= 0.4) return "#eab308";
-  return "#22c55e";
-}
-
-function HeatControlLayer({ points }: { points: HeatPoint[] }) {
-  const map = useMap();
-  const layerRef = useRef<L.Layer | null>(null);
-
-  useEffect(() => {
-    if (!map) return;
-    if (layerRef.current) {
-      map.removeLayer(layerRef.current);
-      layerRef.current = null;
-    }
-    if (points.length === 0) return;
-
-    const heatPoints = points.map(
-      (p) => [p.lat, p.lng, p.riskScore] as [number, number, number]
-    );
-    const layer = (L as unknown as { heatLayer: (pts: [number, number, number][], opts: Record<string, unknown>) => L.Layer })
-      .heatLayer(heatPoints, {
-      radius: 25,
-      blur: 20,
-      maxZoom: 17,
-      max: 1.0,
-      gradient: {
-        0.2: "#22c55e",
-        0.4: "#eab308",
-        0.6: "#f97316",
-        0.8: "#ef4444",
-        1.0: "#7f1d1d",
+function toFeatureCollection(points: HeatPoint[]): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  return {
+    type: "FeatureCollection",
+    features: points.map((p) => ({
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: [p.lng, p.lat],
       },
-    });
-    layer.addTo(map);
-    layerRef.current = layer;
-
-    return () => {
-      if (layerRef.current) {
-        map.removeLayer(layerRef.current);
-        layerRef.current = null;
-      }
-    };
-  }, [map, points]);
-
-  return null;
-}
-
-function FitBounds({ points }: { points: HeatPoint[] }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (points.length < 2) return;
-
-    const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number]));
-    map.fitBounds(bounds, {
-      padding: [32, 32],
-      maxZoom: 12,
-      animate: false,
-    });
-  }, [map, points]);
-
-  return null;
+      properties: {
+        riskScore: p.riskScore,
+        category: p.category ?? "Sin categoria",
+      },
+    })),
+  };
 }
 
 export default function Heatmap({ points, center, zoom, showMarkers = true }: Props) {
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const popupRef = useRef<mapboxgl.Popup | null>(null);
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  const data = useMemo(() => toFeatureCollection(points), [points]);
+
+  useEffect(() => {
+    if (!token || !mapContainerRef.current || mapRef.current) return;
+
+    mapboxgl.accessToken = token;
+
+    const map = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: "mapbox://styles/mapbox/dark-v11",
+      center: [center[1], center[0]],
+      zoom,
+      attributionControl: false,
+    });
+
+    mapRef.current = map;
+    map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
+    map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-right");
+
+    map.on("load", () => {
+      map.addSource("risk-points", {
+        type: "geojson",
+        data,
+      });
+
+      map.addLayer({
+        id: "risk-heatmap",
+        type: "heatmap",
+        source: "risk-points",
+        maxzoom: 15,
+        paint: {
+          "heatmap-weight": [
+            "interpolate",
+            ["linear"],
+            ["get", "riskScore"],
+            0,
+            0,
+            1,
+            1,
+          ],
+          "heatmap-intensity": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            8,
+            0.75,
+            13,
+            1.6,
+          ],
+          "heatmap-color": [
+            "interpolate",
+            ["linear"],
+            ["heatmap-density"],
+            0,
+            "rgba(34,197,94,0)",
+            0.2,
+            "#22c55e",
+            0.4,
+            "#eab308",
+            0.6,
+            "#f97316",
+            0.8,
+            "#ef4444",
+            1,
+            "#7f1d1d",
+          ],
+          "heatmap-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            8,
+            18,
+            13,
+            34,
+          ],
+          "heatmap-opacity": 0.86,
+        },
+      });
+
+      if (showMarkers) {
+        map.addLayer({
+          id: "risk-markers",
+          type: "circle",
+          source: "risk-points",
+          filter: [">=", ["get", "riskScore"], 0.5],
+          paint: {
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["get", "riskScore"],
+              0.5,
+              4,
+              1,
+              12,
+            ],
+            "circle-color": [
+              "interpolate",
+              ["linear"],
+              ["get", "riskScore"],
+              0.5,
+              "#eab308",
+              0.7,
+              "#f97316",
+              0.85,
+              "#ef4444",
+              1,
+              "#7f1d1d",
+            ],
+            "circle-stroke-color": "#ffffff",
+            "circle-stroke-width": 1,
+            "circle-opacity": 0.85,
+          },
+        });
+
+        map.on("mouseenter", "risk-markers", () => {
+          map.getCanvas().style.cursor = "pointer";
+        });
+        map.on("mouseleave", "risk-markers", () => {
+          map.getCanvas().style.cursor = "";
+        });
+        map.on("click", "risk-markers", (event) => {
+          const feature = event.features?.[0];
+          if (!feature || feature.geometry.type !== "Point") return;
+          const coordinates = feature.geometry.coordinates as [number, number];
+          const riskScore = Number(feature.properties?.riskScore ?? 0);
+          const category = String(feature.properties?.category ?? "Sin categoria");
+
+          popupRef.current?.remove();
+          popupRef.current = new mapboxgl.Popup({ closeButton: false, offset: 14 })
+            .setLngLat(coordinates)
+            .setHTML(
+              `<div style="font-size:12px;line-height:1.45"><b>Riesgo ${(riskScore * 100).toFixed(0)}%</b><br/>Categoria: ${category}</div>`
+            )
+            .addTo(map);
+        });
+      }
+
+      if (points.length >= 2) {
+        const bounds = new mapboxgl.LngLatBounds();
+        points.forEach((p) => bounds.extend([p.lng, p.lat]));
+        map.fitBounds(bounds, {
+          padding: 48,
+          maxZoom: 12,
+          duration: 0,
+        });
+      }
+    });
+
+    return () => {
+      popupRef.current?.remove();
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [center, showMarkers, token, zoom]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+
+    const source = map.getSource("risk-points") as mapboxgl.GeoJSONSource | undefined;
+    source?.setData(data);
+
+    if (points.length >= 2) {
+      const bounds = new mapboxgl.LngLatBounds();
+      points.forEach((p) => bounds.extend([p.lng, p.lat]));
+      map.fitBounds(bounds, {
+        padding: 48,
+        maxZoom: 12,
+        duration: 250,
+      });
+    }
+  }, [data, points]);
+
+  if (!token) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-background p-6 text-center">
+        <div className="max-w-md space-y-2">
+          <p className="text-sm font-semibold text-foreground">Mapbox no esta configurado</p>
+          <p className="text-sm text-muted-foreground">
+            Agrega <code className="rounded bg-muted px-1 py-0.5">NEXT_PUBLIC_MAPBOX_TOKEN</code> en tu archivo <code className="rounded bg-muted px-1 py-0.5">.env</code> y reinicia el servidor.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <MapContainer
-      center={center}
-      zoom={zoom}
-      scrollWheelZoom={true}
-      style={{ height: "100%", width: "100%", borderRadius: "0.5rem" }}
-    >
-      <TileLayer
-        attribution='&copy; OpenStreetMap · CARTO'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      />
-      <FitBounds points={points} />
-      <HeatControlLayer points={points} />
-      {showMarkers &&
-        points
-          .filter((p) => p.riskScore >= 0.5)
-          .slice(0, 50)
-          .map((p, i) => (
-            <CircleMarker
-              key={i}
-              center={[p.lat, p.lng]}
-              radius={6 + p.riskScore * 8}
-              pathOptions={{
-                color: riskColor(p.riskScore),
-                fillColor: riskColor(p.riskScore),
-                fillOpacity: 0.6,
-                weight: 1,
-              }}
-            >
-              <Tooltip>
-                <div className="text-xs">
-                  <div>Riesgo: <b>{(p.riskScore * 100).toFixed(0)}%</b></div>
-                  {p.category && <div>Categoría: {p.category}</div>}
-                </div>
-              </Tooltip>
-            </CircleMarker>
-          ))}
-    </MapContainer>
+    <div
+      ref={mapContainerRef}
+      className="h-full w-full overflow-hidden rounded-lg bg-background"
+    />
   );
 }

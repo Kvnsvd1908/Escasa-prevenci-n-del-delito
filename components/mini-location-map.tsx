@@ -1,6 +1,8 @@
 "use client";
 
-import { MapContainer, TileLayer, CircleMarker } from "react-leaflet";
+import { useEffect, useRef } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 type Props = {
   lat: number;
@@ -8,29 +10,47 @@ type Props = {
 };
 
 export default function MiniLocationMap({ lat, lng }: Props) {
-  return (
-    <MapContainer
-      center={[lat, lng]}
-      zoom={16}
-      dragging={false}
-      scrollWheelZoom={false}
-      doubleClickZoom={false}
-      touchZoom={false}
-      zoomControl={false}
-      attributionControl={false}
-      style={{ height: "100%", width: "100%" }}
-    >
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-      <CircleMarker
-        center={[lat, lng]}
-        radius={8}
-        pathOptions={{
-          color: "#ef4444",
-          fillColor: "#ef4444",
-          fillOpacity: 0.75,
-          weight: 2,
-        }}
-      />
-    </MapContainer>
-  );
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markerRef = useRef<mapboxgl.Marker | null>(null);
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+
+  useEffect(() => {
+    if (!token || !mapContainerRef.current || mapRef.current) return;
+
+    mapboxgl.accessToken = token;
+
+    const map = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: "mapbox://styles/mapbox/dark-v11",
+      center: [lng, lat],
+      zoom: 15,
+      interactive: false,
+      attributionControl: false,
+    });
+
+    const el = document.createElement("div");
+    el.className = "mapbox-location-marker";
+    markerRef.current = new mapboxgl.Marker({ element: el, anchor: "center" })
+      .setLngLat([lng, lat])
+      .addTo(map);
+    mapRef.current = map;
+
+    return () => {
+      markerRef.current?.remove();
+      markerRef.current = null;
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [lat, lng, token]);
+
+  if (!token) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-background p-3 text-center text-xs text-muted-foreground">
+        Configura Mapbox
+      </div>
+    );
+  }
+
+  return <div ref={mapContainerRef} className="h-full w-full bg-background" />;
 }
