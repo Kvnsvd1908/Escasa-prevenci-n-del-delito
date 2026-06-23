@@ -40,7 +40,7 @@ Construir una plataforma que permita transformar una gestion reactiva de segurid
 | Estilos | Tailwind CSS |
 | Graficos | Recharts |
 | Validacion | Zod |
-| Gestion del proyecto | Scrum + Jira |
+| Gestion del proyecto | Scrum |
 | Versionamiento | Git + GitHub |
 
 > La especificacion inicial planteaba un motor predictivo en C++ y uso de PostGIS. Para esta implementacion se realizo un pivot tecnico a un stack web moderno con Next.js, TypeScript y Prisma, manteniendo la logica funcional del analisis predictivo: agregacion espacial, ponderacion por categoria, decay temporal y generacion de alertas segun umbral de riesgo.
