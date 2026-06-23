@@ -9,7 +9,7 @@
 
 PRED-CRIM es una aplicacion web full-stack orientada a la prevencion del delito mediante analisis de datos historicos, denuncias ciudadanas, prediccion espacial de riesgo, mapas de calor, reportes estadisticos y alertas operativas para personal en terreno.
 
-El proyecto se desarrolla en el marco de la carrera de Ingenieria en Computacion e Informatica, bajo una metodologia Scrum apoyada en Jira y control de versiones con GitHub.
+El proyecto se desarrolla en el marco de la carrera de Ingenieria en Computacion e Informatica, bajo una metodologia Scrum apoyada y controlada con GitHub.
 
 ## Objetivo del Proyecto
 
